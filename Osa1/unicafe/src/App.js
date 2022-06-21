@@ -48,6 +48,7 @@ const Statistics = ({ good, neutral, bad }) => {
   )
 }
 
+
 // App - component
 const App = () => {
   // Hooks
