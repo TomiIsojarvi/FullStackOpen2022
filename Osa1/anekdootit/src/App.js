@@ -11,6 +11,7 @@ const Anecdote = ({ text, votes }) => (
   </div>
 )
 
+
 // App - component
 const App = () => {
   const anecdotes = [
