@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react'
-import axios from 'axios'
 import Filter from './components/Filter'
 import PersonForm from './components/PersonForm'
 import Persons from './components/Persons'
+import personService from './services/persons'
 
 // App - component
 const App = () => {
@@ -14,10 +14,10 @@ const App = () => {
   const [filter, setFilter] = useState('')
 
   useEffect(() => {
-    axios
-      .get('http://localhost:3001/persons')
-      .then(response => {
-        setPersons(response.data)
+    personService
+      .getAll()
+      .then(initialPersons => {
+        setPersons(initialPersons)
       })
   }, [])
 
@@ -45,15 +45,57 @@ const App = () => {
 
     if (found) {
       // Yes. Person has been already added.
-      alert(`${found.name} has been already added to phonebook.`)
+      if (window.confirm(`${newName} has been already added to the phonebook, replace the old number with a new one?`) === true) {
+
+        // Update the number
+        personService
+          .update(found.id, personObject)
+          .then(response => {
+            // Map a new array with the changed number
+            const newArray = persons.map(person => person.id === found.id ?
+              { ...person, number: newNumber } : person)
+            setPersons(newArray)  // Update
+            // Update
+            setNewName('')
+            setNewNumber('')
+          })
+      }
       return
     }
 
     // No. Person has not been added. Let's add it:
-    setPersons(persons.concat(personObject))
+    personService
+      .create(personObject)
+      .then(returnedPerson => {
+        setPersons(persons.concat(returnedPerson))
+        setNewName('')
+        setNewNumber('')
+      })
+  }
 
-    setNewName('')
-    setNewNumber('')
+  // removePerson - Removes a person from the phonebook
+  const removePerson = (id) => {
+    // find the name of the person using id
+    const name = persons.find(person => person.id === id).name
+
+    // Confirm deletion:
+    if (window.confirm(`Delete ${name}?`) === true) {
+      // Delete the person
+      personService
+        .remove(id)
+        .then(() => {
+          // Filter a new array without the deleted user
+          const newArray = persons.filter(person => person.id !== id)
+          // Update
+          setPersons(newArray)
+          //setError(false)       // Set notification as non-error
+          // Show notification for 5 secoonds
+          /*setNoteMessage(`Deleted ${name}`)
+          setTimeout(() => {
+            setNoteMessage(null)
+          }, 5000)*/
+        })
+    }
   }
 
   // RENDER
@@ -70,7 +112,7 @@ const App = () => {
         numberHandler={handleNumberChange}
       />
       <h2>Numbers</h2>
-      <Persons persons={persons} filter={filter} />
+      <Persons persons={persons} filter={filter} removeHandler={removePerson} />
     </div>
   )
 
