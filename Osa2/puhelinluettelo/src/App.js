@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import Filter from './components/Filter'
 import PersonForm from './components/PersonForm'
 import Persons from './components/Persons'
+import Notification from './components/Notification'
 import personService from './services/persons'
 
 // App - component
@@ -12,6 +13,8 @@ const App = () => {
   const [newName, setNewName] = useState('')
   const [newNumber, setNewNumber] = useState('')
   const [filter, setFilter] = useState('')
+  const [noteMessage, setNoteMessage] = useState(null)
+  const [error, setError] = useState(false)
 
   useEffect(() => {
     personService
@@ -40,6 +43,18 @@ const App = () => {
       number: newNumber
     }
 
+    // Has the user gave a name and a number?
+    // No?
+    if (newName === '' || newNumber === '') {
+      setError(true)
+      // Show the notification for 5 seconds
+      setNoteMessage('Please give a name and a number.')
+      setTimeout(() => {
+        setNoteMessage(null)
+      }, 5000)
+      return
+    }
+
     // Has the person already been added in the phonebook?
     const found = persons.find(person => person.name === newName)
 
@@ -54,10 +69,33 @@ const App = () => {
             // Map a new array with the changed number
             const newArray = persons.map(person => person.id === found.id ?
               { ...person, number: newNumber } : person)
-            setPersons(newArray)  // Update
+            setPersons(newArray)
+            setError(false)   // Set notification as non-error
+
+            // Show the notification for 5 seconds
+            setNoteMessage(`Changed the number for ${response.name}`)
+            setTimeout(() => {
+              setNoteMessage(null)
+            }, 5000)
+
             // Update
             setNewName('')
             setNewNumber('')
+          })
+          // Person has already been deleted
+          .catch(() => {
+            // Set notification as an error
+            setError(true)
+            // Show notification for 5 secoonds
+            setNoteMessage(
+              `Information of ${newName} has already been removed from the server`
+            )
+            setTimeout(() => {
+              setNoteMessage(null)
+            }, 5000)
+
+            // Update
+            setPersons(persons.filter(n => n.id !== found.id))
           })
       }
       return
@@ -68,8 +106,36 @@ const App = () => {
       .create(personObject)
       .then(returnedPerson => {
         setPersons(persons.concat(returnedPerson))
+
+        setError(false)
+        // Show notification for 5 secoonds
+        setNoteMessage(`Added ${returnedPerson.name}`)
+        setTimeout(() => {
+          setNoteMessage(null)
+        }, 5000)
+
         setNewName('')
         setNewNumber('')
+      })
+      // Validation error
+      .catch(error => {
+        // Set notification as an error
+        setError(true)
+        // Show notification for 5 secoonds
+        setNoteMessage(error.response.data.error)
+        setTimeout(() => {
+          setNoteMessage(null)
+        }, 5000)
+      })
+      // Validation error
+      .catch(error => {
+        // Set notification as an error
+        setError(true)
+        // Show notification for 5 secoonds
+        setNoteMessage(error.response.data.error)
+        setTimeout(() => {
+          setNoteMessage(null)
+        }, 5000)
       })
   }
 
@@ -88,12 +154,12 @@ const App = () => {
           const newArray = persons.filter(person => person.id !== id)
           // Update
           setPersons(newArray)
-          //setError(false)       // Set notification as non-error
+          setError(false)   // Set notification as non-error
           // Show notification for 5 secoonds
-          /*setNoteMessage(`Deleted ${name}`)
+          setNoteMessage(`Deleted ${name}`)
           setTimeout(() => {
             setNoteMessage(null)
-          }, 5000)*/
+          }, 5000)
         })
     }
   }
@@ -102,6 +168,7 @@ const App = () => {
   return (
     <div>
       <h2>Phonebook</h2>
+      <Notification message={noteMessage} error={error} />
       <Filter filter={filter} filterHandler={handleFilterChange} />
       <h2>Add new person</h2>
       <PersonForm
