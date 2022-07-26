@@ -29,7 +29,7 @@ const WeatherDetails = ({ capital }) => {
                 ready === true ?
                     // Yes
                     <div>
-                        <img src={`http://openweathermap.org/img/wn/${weather.weather[0].icon}@4x.png`} alt='Plaa plaa plaa' />
+                        <img src={`http://openweathermap.org/img/wn/${weather.weather[0].icon}@4x.png`} alt={weather.weather[0].description} />
                         <p><strong>Temperature:</strong> {weather.main.temp} Celcius</p>
                         <p><strong>Wind:</strong> {weather.wind.speed} m/s</p>
                     </div>
