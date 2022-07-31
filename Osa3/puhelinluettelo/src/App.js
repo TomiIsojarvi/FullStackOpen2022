@@ -82,20 +82,32 @@ const App = () => {
             setNewName('')
             setNewNumber('')
           })
-          // Person has already been deleted
-          .catch(() => {
+          // Error
+          .catch(error => {
             // Set notification as an error
             setError(true)
-            // Show notification for 5 secoonds
-            setNoteMessage(
-              `Information of ${newName} has already been removed from the server`
-            )
-            setTimeout(() => {
-              setNoteMessage(null)
-            }, 5000)
 
-            // Update
-            setPersons(persons.filter(n => n.id !== found.id))
+            // User ID not found?
+            if (error.response.status === 404) {
+              // Show notification for 5 secoonds
+              setNoteMessage(
+                `Information of ${newName} has already been removed from the server`
+              )
+              setTimeout(() => {
+                setNoteMessage(null)
+              }, 5000)
+
+              // Update
+              setPersons(persons.filter(n => n.id !== found.id))
+
+            // Validation error?
+            } else {
+              // Show notification for 5 secoonds
+              setNoteMessage(error.response.data.error)
+              setTimeout(() => {
+                setNoteMessage(null)
+              }, 5000)
+            }
           })
       }
       return
@@ -116,16 +128,6 @@ const App = () => {
 
         setNewName('')
         setNewNumber('')
-      })
-      // Validation error
-      .catch(error => {
-        // Set notification as an error
-        setError(true)
-        // Show notification for 5 secoonds
-        setNoteMessage(error.response.data.error)
-        setTimeout(() => {
-          setNoteMessage(null)
-        }, 5000)
       })
       // Validation error
       .catch(error => {
